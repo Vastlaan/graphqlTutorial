@@ -1,5 +1,5 @@
-const { DataSource } = require('apollo-datasource');
-const isEmail = require('isemail');
+const { DataSource } = require("apollo-datasource");
+const isEmail = require("isemail");
 
 class UserAPI extends DataSource {
   constructor({ store }) {
@@ -61,12 +61,13 @@ class UserAPI extends DataSource {
   }
 
   async getLaunchIdsByUser() {
-    const userId = this.context.user.id;
+    const userId = this.context.user?.id;
+    if (!userId) return [];
     const found = await this.store.trips.findAll({
       where: { userId },
     });
     return found && found.length
-      ? found.map(l => l.dataValues.launchId).filter(l => !!l)
+      ? found.map((l) => l.dataValues.launchId).filter((l) => !!l)
       : [];
   }
 
