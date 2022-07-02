@@ -44,10 +44,52 @@ module.exports = {
     },
   },
   User: {
-    trips: (me, _args, { dataSources }, _info) => {
-      const launchIds = dataSources.userApi.getLaunchIdsByUser();
-      if (!launchIds.lenghts) return [];
+    trips: async (me, _args, { dataSources }, _info) => {
+      const launchIds = await dataSources.userApi.getLaunchIdsByUser();
+      if (!launchIds.length) return [];
       return dataSources.launchApi.getLaunchesByIds(launchIds);
+    },
+  },
+
+  // ================   MUTATIONS =====================
+  Mutation: {
+    login: async (_, { email }, { dataSources }) => {
+      const user = await dataSources.userApi.findOrCreateUser({ email });
+      if (user) {
+        user.token = Buffer.from(email).toString("base64");
+        return user;
+      }
+    },
+    bookTrips: async (_, { launchIds }, { dataSources }) => {
+      const results = await dataSources.userApi.bookTrips({ launchIds });
+      const launches = await dataSources.launchApi.getLaunchesByIds(launchIds);
+
+      return {
+        success: results && results.length === launchIds.length,
+        message:
+          results.length === launchIds.length
+            ? "trips booked successfully"
+            : `the following launches couldn't be booked: ${launchIds.filter(
+                (id) => !results.includes(id)
+              )}`,
+        launches,
+      };
+    },
+    cancelTrip: async (_, { launchId }, { dataSources }) => {
+      const result = await dataSources.userApi.cancelTrip({ launchId });
+
+      if (!result)
+        return {
+          success: false,
+          message: "failed to cancel trip",
+        };
+
+      const launch = await dataSources.launchApi.getLaunchById({ launchId });
+      return {
+        success: true,
+        message: "trip cancelled",
+        launches: [launch],
+      };
     },
   },
 };

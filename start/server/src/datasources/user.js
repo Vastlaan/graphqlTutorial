@@ -28,6 +28,7 @@ class UserAPI extends DataSource {
     if (!email || !isEmail.validate(email)) return null;
 
     const users = await this.store.users.findOrCreate({ where: { email } });
+    console.log({ users });
     return users && users[0] ? users[0] : null;
   }
 
@@ -52,6 +53,7 @@ class UserAPI extends DataSource {
     const res = await this.store.trips.findOrCreate({
       where: { userId, launchId },
     });
+    console.log({ res: JSON.stringify(res) });
     return res && res.length ? res[0].get() : false;
   }
 
